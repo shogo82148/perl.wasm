@@ -27,4 +27,4 @@ jobs:
       - name: Install dependencies
         run: ./build-exec bash -c "cd ./build && carton install"
       - name: build Perl
-        run: ./build-exec bash -c "cd ./build && carton exec build.pl"
+        run: ./build-exec bash -c "cd ./build && carton exec ./build.pl"
