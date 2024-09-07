@@ -1,0 +1,2 @@
+requires 'perl', '5.034';
+requires 'IPC::Run3::Shell', '0.56';
