@@ -1,0 +1,30 @@
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        id: builder-image
+        with:
+          context: builders/wasm32-unknown-emscripten
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Setup builder container
+        timeout-minutes: 1
+        run: |
+          docker run -dit -v "$GITHUB_WORKSPACE:/src" -w /src \
+            -e "ENABLE_GITHUB_ACTIONS_MARKUP=true" \
+            --name builder \
+            ${{ steps.builder-image.outputs.imageid }} /bin/sh
+          # wait for docker exec to be ready
+          until ./build-exec true; do sleep 1; done
+      - name: Install dependencies
+        run: ./build-exec bash -c "cd ./build && carton install"
+      - name: build Perl
+        run: ./build-exec bash -c "cd ./build && carton exec ./build.pl"
