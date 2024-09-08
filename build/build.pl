@@ -42,17 +42,22 @@ emconfigure(
   "-Dhostperl=" . File::Spec->catfile($FindBin::Bin, ".working", "hostperl", "miniperl"),
   "-Dhostgenerate=" . File::Spec->catfile($FindBin::Bin, ".working", "hostperl", "generate_uudmap"),
 );
-
 emmake("make", "-j", $jobs, "all");
 
+# install the core modules into the virtual filesystem
 {
   local $ENV{PERL5LIB} = File::Spec->catfile($FindBin::Bin, ".working", "hostperl", "lib");
   run(
     File::Spec->catfile($FindBin::Bin, ".working", "hostperl", "miniperl"),
     'installperl',
     '-p',
-    '--destdir=' . File::Spec->catfile($FindBin::Bin, ".working", "output"),
+    '--destdir=' . File::Spec->catfile($FindBin::Bin, ".working", "assets"),
   );
 }
 
+# build the emperl.js
+{
+  local $ENV{EMPERL_PRELOAD_FILE} = File::Spec->catfile($FindBin::Bin, ".working", "assets") . "@/";
+  emmake("make", "emperl.js");
+}
 1;

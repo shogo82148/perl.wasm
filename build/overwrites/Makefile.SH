@@ -675,7 +675,9 @@ lintflags = \
 	@echo `$(CCCMDSRC)` -S $*.c
 	@`$(CCCMDSRC)` -S $*.c
 
-all: $(FIRSTMAKEFILE) $(MINIPERL_EXE) $(generated_pods) $(private) $(unidatafiles) $(public) $(dynamic_ext) $(nonxs_ext) extras.make $(MANIFEST_SRT) common_build
+# Skipping the generation of pods files. This is because generating pods files requires Perl that works in the target environment.
+# all: $(FIRSTMAKEFILE) $(MINIPERL_EXE) $(generated_pods) $(private) $(unidatafiles) $(public) $(dynamic_ext) $(nonxs_ext) extras.make $(MANIFEST_SRT) common_build
+all: $(FIRSTMAKEFILE) $(MINIPERL_EXE) $(private) $(unidatafiles) $(public) $(dynamic_ext) $(nonxs_ext) extras.make $(MANIFEST_SRT) common_build
 	@echo " ";
 	@echo "	Everything is up to date. Type '$(MAKE) test' to run test suite."
 
@@ -1069,6 +1071,14 @@ $(PERL_EXE): $& $(perlmain_dep) $(LIBPERL) $(static_ext) ext.libs $(PERLEXPORT) 
 	    esac
         ;;
 
+	emscripten) $spitshell >>$Makefile <<'!NO!SUBS!'
+	# the Perl executable is not needed in the virtual file system.
+	# it is a dummy file for installperl.
+	touch $(PERL_EXE)
+	chmod +x $(PERL_EXE)
+!NO!SUBS!
+	;;
+
         *) $spitshell >>$Makefile <<'!NO!SUBS!'
 	$(SHRPENV) $(CC) -o perl $(CLDFLAGS) $(CCDLFLAGS) $(perlmain_objs) $(static_ext) $(LLIBPERL) `cat ext.libs` $(libs)
 !NO!SUBS!
@@ -1076,6 +1086,10 @@ $(PERL_EXE): $& $(perlmain_dep) $(LIBPERL) $(static_ext) ext.libs $(PERLEXPORT) 
         esac
 
 	$spitshell >>$Makefile <<'!NO!SUBS!'
+
+# The caller needs to invoke this target after correctly setting the EMPERL_PRELOAD_FILE.
+emperl.js: $& $(perlmain_dep) $(LIBPERL) $(static_ext) ext.libs $(PERLEXPORT) write_buildcustomize.pl
+	$(SHRPENV) $(CC) -o $@ $(CLDFLAGS) $(CCDLFLAGS) $(perlmain_objs) $(static_ext) $(LLIBPERL) `cat ext.libs` $(libs) --preload-file $(EMPERL_PRELOAD_FILE)
 
 !NO!SUBS!
 
