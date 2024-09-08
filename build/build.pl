@@ -50,7 +50,7 @@ emmake("make", "-j", $jobs, "all");
   run(
     File::Spec->catfile($FindBin::Bin, ".working", "hostperl", "miniperl"),
     'installperl',
-    '-p',
+    '-p', '-f',
     '--destdir=' . File::Spec->catfile($FindBin::Bin, ".working", "assets"),
   );
 }
